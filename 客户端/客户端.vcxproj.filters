@@ -28,6 +28,12 @@
       <Extensions>moc;h;cpp</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
+    <Filter Include="Header Files\chess">
+      <UniqueIdentifier>{68003cb1-e7e1-4943-9bf4-bc70e720a4f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Lobby Files">
+      <UniqueIdentifier>{ea89f926-d5bc-44bf-905e-56b6466df800}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -72,40 +78,55 @@
     <ClCompile Include="UserInformation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RoomInformation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CtrlBattlePanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RoomWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="Board.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ChooseDlg.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="Board.h">
+      <Filter>Header Files\chess</Filter>
+    </QtMoc>
     <QtMoc Include="CtrlPanel.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="LobbyClient.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="LoginGUI.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="MainWnd.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\chess</Filter>
     </QtMoc>
     <QtMoc Include="MultiGame.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\chess</Filter>
     </QtMoc>
     <QtMoc Include="NetGame.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="RegisterGUI.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\chess</Filter>
     </QtMoc>
     <QtMoc Include="SingleGame.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\chess</Filter>
     </QtMoc>
     <QtMoc Include="Step.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\chess</Filter>
+    </QtMoc>
+    <QtMoc Include="MainWnd.h">
+      <Filter>Header Files\chess</Filter>
+    </QtMoc>
+    <QtMoc Include="LobbyClient.h">
+      <Filter>Header Files\Lobby Files</Filter>
+    </QtMoc>
+    <QtMoc Include="LoginGUI.h">
+      <Filter>Header Files\Lobby Files</Filter>
+    </QtMoc>
+    <QtMoc Include="RegisterGUI.h">
+      <Filter>Header Files\Lobby Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CtrlBattlePanel.h">
+      <Filter>Header Files\Lobby Files</Filter>
+    </QtMoc>
+    <QtMoc Include="RoomWnd.h">
+      <Filter>Header Files\Lobby Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -117,11 +138,14 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Stone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="UserInformation.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RoomInformation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stone.h">
+      <Filter>Header Files\chess</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

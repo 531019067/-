@@ -56,15 +56,15 @@ void LoginGUI::init()
 	connect(_signUp, SIGNAL(clicked()), this, SLOT(slotSignUp()));
 	
 
-	mainLayout->addWidget(_headPixmap, 0, 0, 3, 1);//头像
+	mainLayout->addWidget(_headPixmap, 0, 0, 2, 1);//头像
 	//第一行
 	mainLayout->addWidget(_accLabel, 0, 1, 1, 1);
 	mainLayout->addWidget(_accText, 0, 2, 1, 2);
-	mainLayout->addWidget(_signUp, 0, 4);//注册账号
+	mainLayout->addWidget(_signUp, 0, 4);//注册账号按钮
 	//第二行
 	mainLayout->addWidget(_pwdLabel, 1, 1, 1, 1);
 	mainLayout->addWidget(_pwdText, 1, 2, 1, 2);
-	mainLayout->addWidget(_retrieve, 1, 4);//找回密码
+	mainLayout->addWidget(_retrieve, 1, 4);//找回密码按钮
 	//第三行
 	mainLayout->addWidget(_rememberBox, 2, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);//记住密码 第2行，第1列开始，占1行1列 水平居左 垂直居中
 	mainLayout->addWidget(_autoLoginBox, 2, 2, 1, 1, Qt::AlignRight | Qt::AlignVCenter);//自动登录 第2行，第2列开始，占1行1列 水平居右 垂直居中
@@ -127,6 +127,7 @@ void LoginGUI::slotSignUp()
 	disconnect(_socket, SIGNAL(readyRead()), this, SLOT(slotDataArrive()));
 	_registerGUI->exec();
 	_registerGUI->disconnect(_socket, SIGNAL(readyRead()), _registerGUI, SLOT(slotDataArrive()));
+	delete _registerGUI;
 	connect(_socket, SIGNAL(readyRead()), this, SLOT(slotDataArrive()));
 
 }

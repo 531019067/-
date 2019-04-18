@@ -13,17 +13,18 @@ int main(int argc, char* argv[])
     QTime t = QTime::currentTime();
     qsrand(t.msec()+t.second()*1000);
 	Lobby lobby;
-	lobby.show();
 	lobby.init();
+	lobby.show();
+	
 	if (lobby.login() == false)
 		return 0;
-	ChooseDlg  dlg;
+	/*ChooseDlg  dlg;
 	if(dlg.exec() != QDialog::Accepted)
 		return 0;
 
 	MainWnd wnd(dlg._selected);
-
-
+	wnd.show();
+*/
 
 
 
