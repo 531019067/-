@@ -1,6 +1,6 @@
 #include "LobbyClient.h"
 #include "CtrlBattlePanel.h"
-#include <QScrollArea>
+#include "MainWnd.h"
 #pragma execution_character_set("utf-8")
 Lobby::Lobby(QWidget *parent /* = 0 */):QWidget(parent)
 {
@@ -47,7 +47,15 @@ void Lobby::createBattle(QByteArray data)
 }
 void Lobby::joinBattle(QByteArray data)
 {
+	switch (data.at(0))
+	{
+	case 1:
 
+		break;
+	case 2:
+		QMessageBox::information(this, "提醒", "房间已满");
+		break;
+	}
 }
 void Lobby::loadRoomList(QByteArray data)
 {
@@ -71,12 +79,17 @@ void Lobby::slotCreateBattle()
 	data.append(' ');
 	data.append(_userInfo._username);
 	_socket->write(data);
+	MainWnd *chess=new MainWnd(3);
+	chess->show();
 }
 void Lobby::slotJoinBattle()
 {
 	QByteArray data;
+	int row = _roomWnd->_roomList->currentRow();
 	data.append(4);
-
+	data.append(' ');
+	data.append(row);
+	_socket->write(data);
 }
 void Lobby::slotLoadRoomListWidget()
 {

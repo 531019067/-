@@ -2,7 +2,7 @@
 #include <QWidget>
 #include <QList>
 #include <QLabel>
-
+#include <QUdpSocket>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QTcpSocket>
@@ -15,13 +15,17 @@ class RoomWnd : public QWidget
 public:
 	explicit RoomWnd(QWidget *parent=0);
 	~RoomWnd();
+public slots:
+	void slotDataArrive();
 public:
+	const int UDP_PORT = 9897;
 	QListWidget *_roomList;
 	QVBoxLayout * _vLayout;
-	QTcpSocket *_socket;
+	QTcpSocket *_tcpSocket;
+	QUdpSocket *_udpSocket;
 	int _count;
 	//QList<RoomInformation> *_roomList;
-
+	void updateRoomList(const RoomInformation&room);
 	void addRoom(const RoomInformation &room);
 	void removeRoom(int id);
 
