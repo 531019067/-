@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QUdpSocket>
 #include <QPushButton>
+#include <QMessageBox>
 #include <QVBoxLayout>
 #include <QTcpSocket>
 #include <QListWidget>
@@ -13,20 +14,20 @@ class RoomWnd : public QWidget
 {
 	Q_OBJECT
 public:
-	explicit RoomWnd(QWidget *parent=0);
+	explicit RoomWnd(QWidget *parent = 0);
 	~RoomWnd();
 public slots:
 	void slotDataArrive();
 public:
 	const int UDP_PORT = 9897;
-	QListWidget *_roomList;
+	QListWidget *_roomListWidget;
 	QVBoxLayout * _vLayout;
 	QTcpSocket *_tcpSocket;
 	QUdpSocket *_udpSocket;
 	int _count;
-	//QList<RoomInformation> *_roomList;
+	QList<int> _roomIdList;
 	void updateRoomList(const RoomInformation&room);
 	void addRoom(const RoomInformation &room);
-	void removeRoom(int id);
+	void removeRoom(const RoomInformation &room);
 
 };

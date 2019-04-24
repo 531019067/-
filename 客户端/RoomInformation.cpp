@@ -1,7 +1,7 @@
 #include "RoomInformation.h"
 
 RoomInformation::RoomInformation(int id,  QString ownerName, QString password , int playerNum , int observerNum)
-	:_id(id), _ownerName(ownerName), _password(password),_playerNum(playerNum),_observerNum(observerNum)
+	:_id(id), _ownerName(ownerName), _password(password),_playerNum(playerNum),_observerNum(observerNum),_ipAddress(QHostAddress("127.0.0.1"))
 {
 }
 
@@ -45,14 +45,23 @@ QByteArray & RoomInformation::Serializable(const RoomInformation & roomInfo)
 	return *tmp_array;
 }
 
+bool RoomInformation::operator==(const RoomInformation & rvalue)
+{
+	if (this->_id == rvalue._id)
+		return true;
+	else
+		return false;
+}
+
+
 QDataStream & operator<<(QDataStream & out, const RoomInformation & roomInfo)
 {
-	out << roomInfo._id << roomInfo._ownerName << roomInfo._playerNum << roomInfo._observerNum << roomInfo._password;
+	out << roomInfo._id << roomInfo._ownerName << roomInfo._playerNum << roomInfo._observerNum << roomInfo._password<<roomInfo._ipAddress;
 	return out;
 }
 
 QDataStream & operator>>(QDataStream & in, RoomInformation & roomInfo)
 {
-	in >> roomInfo._id >> roomInfo._ownerName >> roomInfo._playerNum >> roomInfo._observerNum >> roomInfo._password;
+	in >> roomInfo._id >> roomInfo._ownerName >> roomInfo._playerNum >> roomInfo._observerNum >> roomInfo._password>>roomInfo._ipAddress;
 	return in;
 }

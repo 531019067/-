@@ -4,7 +4,7 @@
 #include "MultiGame.h"
 #include "NetGame.h"
 
-MainWnd::MainWnd(int gameType, QWidget *parent) : QWidget(parent)
+MainWnd::MainWnd(int gameType,RoomInformation *room, QWidget *parent) : QWidget(parent),_currentRoom(room)
 {
     _gameType = gameType;
 
@@ -40,7 +40,10 @@ MainWnd::MainWnd(int gameType, QWidget *parent) : QWidget(parent)
     }
     else if(_gameType == 3)//¿Í»§¶Ë
     {
-        NetGame* game = new NetGame(false);
+		QHostAddress ip = QHostAddress("127.0.0.1");
+		if (_currentRoom != nullptr)
+			ip = _currentRoom->_ipAddress;
+        NetGame* game = new NetGame(false,ip);
         CtrlPanel* panel = new CtrlPanel;
 
         QHBoxLayout* hLay = new QHBoxLayout(this);
@@ -52,6 +55,16 @@ MainWnd::MainWnd(int gameType, QWidget *parent) : QWidget(parent)
 
 MainWnd::~MainWnd()
 {
+
+}
+
+void MainWnd::closeEvent(QCloseEvent * event)
+{
+	if (!(QMessageBox::information(this, tr("CT Control View"), tr("Do you really want to log out CT Control View?"), tr("Yes"), tr("No"))))
+	{
+		this->close();
+	}
+	emit quitBattle();
 
 }
 

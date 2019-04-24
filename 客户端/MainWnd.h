@@ -4,19 +4,21 @@
 #include <QWidget>
 #include "Board.h"
 #include "CtrlPanel.h"
-
+#include "RoomInformation.h"
+#include <QHostAddress>
 
 class MainWnd : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MainWnd(int gameType, QWidget *parent = 0);
+    explicit MainWnd(int gameType,RoomInformation * room=nullptr,QWidget *parent = 0);
     ~MainWnd();
-
+	RoomInformation *_currentRoom;
     int _gameType;
-
+protected:
+	void closeEvent(QCloseEvent *event) override;
 signals:
-
+	void quitBattle();
 public slots:
 };
 

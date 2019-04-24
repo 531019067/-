@@ -8,6 +8,7 @@ Lobby::Lobby(QWidget *parent /* = 0 */):QWidget(parent)
 	setMinimumSize(500,500);
 	_roomWnd = new RoomWnd(this);
 
+
 	_socket = new QTcpSocket(this);
 	_socket->connectToHost(QHostAddress("127.0.0.1"), 9898);
 	if (_socket->waitForConnected(3000) == false)
@@ -38,23 +39,31 @@ bool Lobby::login()
 void Lobby::createBattle(QByteArray data)
 {
 	QDataStream in(data);
-	int roomId;
-	in >> roomId;
-	RoomInformation room(roomId, _userInfo._username);
-	_roomWnd->addRoom(room);
-	
+	RoomInformation *room=new RoomInformation;
+	in >> *room;
+
+	_chessWnd = new MainWnd(2,room);
+	connect(_chessWnd, SIGNAL(quitBattle()), this, SLOT(slotQuitBattle()));
+	_chessWnd->show();
+
 
 }
 void Lobby::joinBattle(QByteArray data)
 {
-	switch (data.at(0))
+	QDataStream in(data);
+	RoomInformation *room=new RoomInformation();
+	in >> *room;
+	if (room->_playerNum==1)
 	{
-	case 1:
-
-		break;
-	case 2:
+		_chessWnd = new MainWnd(3,room);
+		connect(_chessWnd, SIGNAL(quitBattle()), this, SLOT(slotQuitBattle()));
+		_chessWnd->show();
+		
+	}
+	else if(room->_playerNum== 2)
+	{
 		QMessageBox::information(this, "提醒", "房间已满");
-		break;
+		
 	}
 }
 void Lobby::loadRoomList(QByteArray data)
@@ -72,6 +81,8 @@ void Lobby::loadRoomList(QByteArray data)
 }
 
 
+
+
 void Lobby::slotCreateBattle()
 {
 	QByteArray data;
@@ -79,23 +90,45 @@ void Lobby::slotCreateBattle()
 	data.append(' ');
 	data.append(_userInfo._username);
 	_socket->write(data);
-	MainWnd *chess=new MainWnd(3);
-	chess->show();
+	
+
 }
 void Lobby::slotJoinBattle()
 {
 	QByteArray data;
-	int row = _roomWnd->_roomList->currentRow();
+	int row = _roomWnd->_roomListWidget->currentRow();
 	data.append(4);
 	data.append(' ');
 	data.append(row);
 	_socket->write(data);
 }
+void Lobby::slotQuitBattle()
+{
+	if (_chessWnd == nullptr)
+		return;
+	QByteArray data;
+	data.append(6);
+	if (_chessWnd->_gameType == 2)//服务器
+		data.append(2);
+	else if (_chessWnd->_gameType == 3)//客户端
+		data.append(3);
+	else
+		return;
+
+	data.append(_chessWnd->_currentRoom->_id);
+	_socket->write(data);
+}
+
 void Lobby::slotLoadRoomListWidget()
 {
 	QByteArray data;
 	data.append(5);
 	_socket->write(data);
+}
+void Lobby::slotExitBattle()
+{
+	QByteArray data;
+	QMessageBox::information(this, "tips", "quit");
 }
 void Lobby::slotDataArrive()
 {

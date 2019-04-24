@@ -17,7 +17,7 @@ class NetGame : public Board
 {
     Q_OBJECT
 public:
-    explicit NetGame(bool server, QWidget *parent = 0);
+    explicit NetGame(bool server,QHostAddress ip= QHostAddress("127.0.0.1"), QWidget *parent = 0);
     ~NetGame();
 
     bool _bServer;

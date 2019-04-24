@@ -1,6 +1,6 @@
 #include "NetGame.h"
-
-NetGame::NetGame(bool server, QWidget *parent) : Board(parent)
+#include <QMessageBox>
+NetGame::NetGame(bool server, QHostAddress ip,QWidget *parent) : Board(parent)
 {
     _server = NULL;
     _socket = NULL;
@@ -15,7 +15,12 @@ NetGame::NetGame(bool server, QWidget *parent) : Board(parent)
     else
     {
         _socket = new QTcpSocket(this);
-        _socket->connectToHost(QHostAddress("127.0.0.1"), 9899);
+	
+        _socket->connectToHost(ip, 9899);
+		if (_socket->waitForConnected(3000) == false)
+		{
+			QMessageBox::information(this,"tips","error");
+		}
         connect(_socket, SIGNAL(readyRead()), this, SLOT(slotDataArrive()));
     }
 }
