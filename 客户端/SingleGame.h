@@ -14,7 +14,6 @@ public:
 
     void back();
     void click(int id, int row, int col);
-
     Step* getBestMove();
     void getAllPossibleMove(QVector<Step*>& steps);
     int getMinScore(int level, int curMin);

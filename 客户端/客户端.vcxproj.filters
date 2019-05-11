@@ -87,6 +87,15 @@
     <ClCompile Include="RoomWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ChessSituation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StepRecord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ChooseDlg.h">
@@ -128,6 +137,12 @@
     <QtMoc Include="RoomWnd.h">
       <Filter>Header Files\Lobby Files</Filter>
     </QtMoc>
+    <QtMoc Include="StepRecord.h">
+      <Filter>Header Files\chess</Filter>
+    </QtMoc>
+    <QtMoc Include="LoadDlg.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="ChessClient.qrc">
@@ -146,6 +161,12 @@
     </ClInclude>
     <ClInclude Include="Stone.h">
       <Filter>Header Files\chess</Filter>
+    </ClInclude>
+    <ClInclude Include="ChessSituation.h">
+      <Filter>Header Files\chess</Filter>
+    </ClInclude>
+    <ClInclude Include="ChessParameter.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

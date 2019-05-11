@@ -17,40 +17,40 @@ QString Stone::bmpDir()
 	{
 		switch (this->_type)
 		{
-		case CHE:
-			return ".\\Resources\\RCHE";
-		case MA:
-			return ".\\Resources\\RMA";
-		case PAO:
-			return ".\\Resources\\RPAO";
-		case BING:
-			return ".\\Resources\\RBING";
-		case JIANG:
-			return ".\\Resources\\RJIANG";
-		case SHI:
-			return ".\\Resources\\RSHI";
-		case XIANG:
-			return ".\\Resources\\RXIANG";
+		case ROOK://车
+			return ".\\Resources\\RR";
+		case KNIGHT://马
+			return ".\\Resources\\RN";
+		case CANNON://炮
+			return ".\\Resources\\RC";
+		case PAWN://兵
+			return ".\\Resources\\RP";
+		case KING://帅
+			return ".\\Resources\\RK";
+		case ADVISOR://士
+			return ".\\Resources\\RA";
+		case BISHOP://象
+			return ".\\Resources\\RB";
 		}
 	}
 	else
 	{
 		switch (this->_type)
 		{
-		case CHE:
-			return ".\\Resources\\BCHE";
-		case MA:
-			return ".\\Resources\\BMA";
-		case PAO:
-			return ".\\Resources\\BPAO";
-		case BING:
-			return ".\\Resources\\BBING";
-		case JIANG:
-			return ".\\Resources\\BJIANG";
-		case SHI:
-			return ".\\Resources\\BSHI";
-		case XIANG:
-			return ".\\Resources\\BXIANG";
+		case ROOK:
+			return ".\\Resources\\BR";
+		case KNIGHT:
+			return ".\\Resources\\BN";
+		case CANNON:
+			return ".\\Resources\\BC";
+		case PAWN:
+			return ".\\Resources\\BP";
+		case KING:
+			return ".\\Resources\\BK";
+		case ADVISOR:
+			return ".\\Resources\\BA";
+		case BISHOP:
+			return ".\\Resources\\BB";
 		}
 	}
 	return QString::fromLocal8Bit("错误");
@@ -62,19 +62,19 @@ QString Stone::name()
 	{
 		switch (this->_type)
 		{
-		case CHE:
+		case ROOK:
 			return QString::fromLocal8Bit("車");
-		case MA:
+		case KNIGHT:
 			return QString::fromLocal8Bit("馬");
-		case PAO:
+		case CANNON:
 			return QString::fromLocal8Bit("炮");
-		case BING:
+		case PAWN:
 			return QString::fromLocal8Bit("兵");
-		case JIANG:
+		case KING:
 			return QString::fromLocal8Bit("帅");
-		case SHI:
+		case ADVISOR:
 			return QString::fromLocal8Bit("士");
-		case XIANG:
+		case BISHOP:
 			return QString::fromLocal8Bit("相");
 		}
 	}
@@ -82,19 +82,19 @@ QString Stone::name()
 	{
 		switch (this->_type)
 		{
-		case CHE:
+		case ROOK:
 			return QString::fromLocal8Bit("車");
-		case MA:
+		case KNIGHT:
 			return QString::fromLocal8Bit("馬");
-		case PAO:
+		case CANNON:
 			return QString::fromLocal8Bit("炮");
-		case BING:
+		case PAWN:
 			return QString::fromLocal8Bit("卒");
-		case JIANG:
+		case KING:
 			return QString::fromLocal8Bit("将");
-		case SHI:
+		case ADVISOR:
 			return QString::fromLocal8Bit("仕");
-		case XIANG:
+		case BISHOP:
 			return QString::fromLocal8Bit("象");
 		}
 	}
@@ -104,27 +104,28 @@ QString Stone::name()
 
 void Stone::init(int id)//根据ID决定棋子类型，初始行列
 {
+	//每方的棋子顺序依次是：帅仕仕相相马马车车炮炮兵兵兵兵兵(将士士象象马马车车炮炮卒卒卒卒卒)
     struct {
         int row, col;
-        Stone::TYPE type;
+		Stone::TPYE type;
     } pos[16] = {
-    {0, 0, Stone::CHE},
-    {0, 1, Stone::MA},
-    {0, 2, Stone::XIANG},
-    {0, 3, Stone::SHI},
-    {0, 4, Stone::JIANG},
-    {0, 5, Stone::SHI},
-    {0, 6, Stone::XIANG},
-    {0, 7, Stone::MA},
-    {0, 8, Stone::CHE},
+	{0, 4, Stone::KING},
+	{0, 3, Stone::ADVISOR},
+	{0, 5, Stone::ADVISOR},
+	{0, 2, Stone::BISHOP},
+	{0, 6, Stone::BISHOP},
+	{0, 1, Stone::KNIGHT},
+	{0, 7, Stone::KNIGHT},
+    {0, 0, Stone::ROOK},
+    {0, 8, Stone::ROOK},
 
-    {2, 1, Stone::PAO},
-    {2, 7, Stone::PAO},
-    {3, 0, Stone::BING},
-    {3, 2, Stone::BING},
-    {3, 4, Stone::BING},
-    {3, 6, Stone::BING},
-    {3, 8, Stone::BING},
+    {2, 1, Stone::CANNON},
+    {2, 7, Stone::CANNON},
+    {3, 0, Stone::PAWN},
+    {3, 2, Stone::PAWN},
+    {3, 4, Stone::PAWN},
+    {3, 6, Stone::PAWN},
+    {3, 8, Stone::PAWN},
     };
 
     if(id < 16)

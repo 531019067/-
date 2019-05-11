@@ -45,7 +45,7 @@ void NetGame::slotNewConnection()
 
 void NetGame::back()
 {
-    if(_bRedTurn != _bSide)
+    if(_bRedTurn != _bRedSide)
         return;
     backOne();
     backOne();
@@ -57,7 +57,7 @@ void NetGame::back()
 
 void NetGame::click(int id, int row, int col)
 {
-    if(_bRedTurn != _bSide)
+    if(_bRedTurn != _bRedSide)
         return;
 
     Board::click(id, row, col);

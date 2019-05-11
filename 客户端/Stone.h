@@ -4,19 +4,26 @@
 #include <QRect>
 #include <QPainter>
 #include <QTextCodec>
+//const int PIECE_KING = 0;
+//const int PIECE_ADVISOR = 1;
+//const int PIECE_BISHOP = 2;
+//const int PIECE_KNIGHT = 3;
+//const int PIECE_ROOK = 4;
+//const int PIECE_CANNON = 5;
+//const int PIECE_PAWN = 6;
 class Stone
 {
 public:
     Stone();
     ~Stone();
 
-    enum TYPE{CHE, MA, PAO, BING, JIANG, SHI, XIANG};
+	enum TPYE{KING,ADVISOR,BISHOP,KNIGHT,ROOK,CANNON,PAWN};
 
     void init(int id);
 
     int _row;
     int _col;
-    TYPE _type;
+	TPYE _type;
     bool _dead;
     bool _red;
     int _id;

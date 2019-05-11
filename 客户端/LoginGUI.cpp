@@ -36,7 +36,7 @@ void LoginGUI::init()
 {
 	QGridLayout *mainLayout = new QGridLayout(this);
 	//头像
-	QPixmap headPicture(".\\Resources\\RJIANG");
+	QPixmap headPicture(".\\Resources\\RK");
 	
 	_headPixmap->setFixedSize(90, 90);
 	_headPixmap->setPixmap(headPicture);

@@ -3,7 +3,7 @@
 #include <QDebug>
 SingleGame::SingleGame(QWidget *parent) : Board(parent)
 {
-    _level = 4;
+    _level = 3;
 }
 
 SingleGame::~SingleGame()
@@ -32,10 +32,11 @@ void SingleGame::click(int id, int row, int col)
     }
 }
 
+
 void SingleGame::computerMove()
 {
     Step* step = getBestMove();
-    moveStone(step->_moveid, step->_killid, step->_rowTo, step->_colTo);
+    actualMoveStone(step->_moveid, step->_killid, step->_rowTo, step->_colTo);
     delete step;
     update();
 }
@@ -96,7 +97,7 @@ int SingleGame::getMinScore(int level, int curMin)
         return score();
 
     QVector<Step*> steps;
-    getAllPossibleMove(steps);
+    getAllPossibleMove(steps);//获得红方的全部走法
     int minInAllMaxScore = 300000;
 
     while(steps.count())
@@ -109,7 +110,7 @@ int SingleGame::getMinScore(int level, int curMin)
         unfakeMove(step);
         delete step;
 
-        if(maxScore <= curMin)
+        if(maxScore < curMin)//当一个节点的存在一个子节点小于 当前最小值时，这该节点就该舍去。剪枝算法
         {
             while(steps.count())
             {
@@ -148,7 +149,7 @@ int SingleGame::getMaxScore(int level, int curMax)
         unfakeMove(step);
         delete step;
 
-        if(minScore >= curMax)
+        if(minScore > curMax)
         {
             while(steps.count())
             {
@@ -172,13 +173,13 @@ int SingleGame::getMaxScore(int level, int curMax)
 void SingleGame::fakeMove(Step *step)
 {
     killStone(step->_killid);
-    moveStone(step->_moveid, step->_rowTo, step->_colTo);
+   moveStone(step->_moveid, step->_rowTo, step->_colTo);
 }
 
 void SingleGame::unfakeMove(Step *step)
 {
     reliveStone(step->_killid);
-    moveStone(step->_moveid, step->_rowFrom, step->_colFrom);
+   moveStone(step->_moveid, step->_rowFrom, step->_colFrom);
 }
 
 void SingleGame::getAllPossibleMove(QVector<Step *> &steps)

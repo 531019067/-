@@ -1,5 +1,5 @@
 #include "RoomWnd.h"
-#include <QScrollArea>
+
 #pragma execution_character_set("utf-8")
 RoomWnd::RoomWnd(QWidget *parent/* =0 */)
 	: QWidget(parent),

@@ -13,11 +13,22 @@ public:
     ~CtrlPanel();
 
     QPushButton* _back;
-	QLabel *_picture;
+	QPushButton* _newBattle;
+	QPushButton* _saveBattle;
+	QPushButton* _loadBattle;
+	QPushButton* _giveUp;
+	QPushButton* _suePeace;
+	QPushButton* _menu;
+
 signals:
     void sigBack();
-
+	void sigNew();
+	void sigLoad();
+	void sigSave();
+	void sigGive();
+	void sigPeace();
 public slots:
+
 };
 
 #endif // CTRLPANEL_H

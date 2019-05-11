@@ -5,13 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-/*
- * 报文格式定义
- * 1.初始化    两个字节
- * 2.鼠标点击   四个字节
- * 3.悔棋      一个字节
- *
-*/
+
 
 class NetGame : public Board
 {
