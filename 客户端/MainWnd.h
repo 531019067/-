@@ -14,6 +14,7 @@ public:
     explicit MainWnd(int gameType,RoomInformation * room=nullptr,QWidget *parent = 0);
     ~MainWnd();
 	RoomInformation *_currentRoom;
+	Board *_game;
     int _gameType;
 protected:
 	void closeEvent(QCloseEvent *event) override;

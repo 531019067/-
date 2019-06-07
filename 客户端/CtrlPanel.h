@@ -4,14 +4,14 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QLabel>
-
+#include "Board.h"
 class CtrlPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CtrlPanel(QWidget *parent = 0);
+    explicit CtrlPanel(Board&game,QWidget *parent = 0);
     ~CtrlPanel();
-
+	Board *_game;
     QPushButton* _back;
 	QPushButton* _newBattle;
 	QPushButton* _saveBattle;
@@ -21,14 +21,14 @@ public:
 	QPushButton* _menu;
 
 signals:
-    void sigBack();
-	void sigNew();
-	void sigLoad();
-	void sigSave();
-	void sigGive();
-	void sigPeace();
-public slots:
+	void sigCleanRecord(bool turn);
 
+public slots:
+	void slotNew();
+	void slotLoad();
+	void slotSave();
+	void slotBack();
+	void slotMenu();
 };
 
 #endif // CTRLPANEL_H

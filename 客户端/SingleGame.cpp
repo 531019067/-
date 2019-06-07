@@ -25,7 +25,7 @@ void SingleGame::click(int id, int row, int col)
     if(_bRedTurn)
     {
         Board::click(id, row, col);
-        if(!_bRedTurn)
+        if(!_bRedTurn&&!_over)
         {
             QTimer::singleShot(100, this, SLOT(computerMove()));
         }
@@ -75,7 +75,7 @@ Step* SingleGame::getBestMove()
 int SingleGame::score()
 {
   //  enum TYPE{CHE, MA, PAO, BING, JIANG, SHI, XIANG};
-    static int s[] = {1000, 499, 501, 200, 15000, 100, 100};
+	static int s[] = { 15000, 100,100,499,1000, 501, 200 };
     int scoreBlack = 0;
     int scoreRed = 0;
     for(int i=0; i<16; ++i)

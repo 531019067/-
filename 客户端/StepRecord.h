@@ -22,7 +22,7 @@ public:
 public slots:
 	void slotAddRecord(QString record);
 	void slotBack();
-	void slotClear();
+	void slotClear(bool turn=true);
 	void slotNextPage();
 	void slotPreviousPage();
 private:

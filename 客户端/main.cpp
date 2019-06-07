@@ -17,6 +17,7 @@ int main(int argc, char* argv[])
 	ChooseDlg  dlg;
 	dlg.setWindowTitle(QString::fromLocal8Bit("ÖÐ¹úÏóÆå"));
 	dlg.resize(200, 200);
+
 	if (dlg.exec() != QDialog::Accepted)
 		return 0;
 	if (dlg._selected == 0 || dlg._selected == 1)

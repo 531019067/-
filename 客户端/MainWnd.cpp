@@ -4,6 +4,7 @@
 #include "MultiGame.h"
 #include "NetGame.h"
 #include "StepRecord.h"
+#include <QCloseEvent>
 #pragma execution_character_set("utf-8")
 MainWnd::MainWnd(int gameType,RoomInformation *room, QWidget *parent) : QWidget(parent),_currentRoom(room)
 {
@@ -11,70 +12,32 @@ MainWnd::MainWnd(int gameType,RoomInformation *room, QWidget *parent) : QWidget(
 
     if(_gameType == 0)//单人，人机对战
     {
-        SingleGame* game = new SingleGame;
-        CtrlPanel* panel = new CtrlPanel;
-		StepRecord*stepList = new StepRecord;
-        QHBoxLayout* hLay = new QHBoxLayout(this);
-        hLay->addWidget(game, 1);
-        hLay->addWidget(panel);
-		hLay->addWidget(stepList);
-        connect(panel, SIGNAL(sigBack()), game, SLOT(slotBack()));
-		connect(panel, SIGNAL(sigSave()), game, SLOT(slotSave()));
-		connect(panel, SIGNAL(sigLoad()), game, SLOT(slotLoad()));
-		connect(panel, SIGNAL(sigNew()), stepList, SLOT(slotClear()));
-		connect(panel, SIGNAL(sigNew()), game, SLOT(slotNew()));
-		connect(game, SIGNAL(sigMove(QString)), stepList, SLOT(slotAddRecord(QString)));
-		connect(game, SIGNAL(sigBack()), stepList, SLOT(slotBack()));
-
-
-		
+        _game = new SingleGame;
     }
     else if(_gameType == 1)//两人对战
     {
-        MultiGame* game = new MultiGame;
-        CtrlPanel* panel = new CtrlPanel;
-
-        QHBoxLayout* hLay = new QHBoxLayout(this);
-        hLay->addWidget(game, 1);
-        hLay->addWidget(panel);
-        connect(panel, SIGNAL(sigBack()), game, SLOT(slotBack()));
-
-		StepRecord*stepList = new StepRecord;
-		hLay->addWidget(stepList);
-		connect(game, SIGNAL(sigMove(QString)), stepList, SLOT(slotAddRecord(QString)));
-		connect(game, SIGNAL(sigBack()), stepList, SLOT(slotBack()));
+        _game = new MultiGame;
     }
     else if(_gameType == 2)//服务端
     {
-        NetGame* game = new NetGame(true);
-        CtrlPanel* panel = new CtrlPanel;
-
-        QHBoxLayout* hLay = new QHBoxLayout(this);
-        hLay->addWidget(game, 1);
-        hLay->addWidget(panel);
-        connect(panel, SIGNAL(sigBack()), game, SLOT(slotBack()));
-		StepRecord*stepList = new StepRecord;
-		hLay->addWidget(stepList);
-		connect(game, SIGNAL(sigMove(QString)), stepList, SLOT(slotAddRecord(QString)));
-		connect(game, SIGNAL(sigBack()), stepList, SLOT(slotBack()));
+		_game = new NetGame(true);
     }
     else if(_gameType == 3)//客户端
     {
 		QHostAddress ip = QHostAddress("127.0.0.1");
 		if (_currentRoom != nullptr)
 			ip = _currentRoom->_ipAddress;
-        NetGame* game = new NetGame(false,ip);
-        CtrlPanel* panel = new CtrlPanel;
-
-        QHBoxLayout* hLay = new QHBoxLayout(this);
-        hLay->addWidget(game, 1);
-        hLay->addWidget(panel);
-        connect(panel, SIGNAL(sigBack()), game, SLOT(slotBack()));
-		StepRecord*stepList = new StepRecord;
-		hLay->addWidget(stepList);
-		connect(game, SIGNAL(sigMove(QString)), stepList, SLOT(slotAddRecord(QString)));
-		connect(game, SIGNAL(sigBack()), stepList, SLOT(slotBack()));
+        _game = new NetGame(false,ip);
     }
+	CtrlPanel* panel = new CtrlPanel(*_game);
+	StepRecord*stepList = new StepRecord;
+	QHBoxLayout* hLay = new QHBoxLayout(this);
+	hLay->addWidget(_game, 1);
+	hLay->addWidget(panel);
+	hLay->addWidget(stepList);
+	connect(panel, SIGNAL(sigCleanRecord(bool)), stepList, SLOT(slotClear(bool)));
+	connect(_game, SIGNAL(sigMove(QString)), stepList, SLOT(slotAddRecord(QString)));
+	connect(_game, SIGNAL(sigBack()), stepList, SLOT(slotBack()));
 }
 
 MainWnd::~MainWnd()
@@ -84,10 +47,19 @@ MainWnd::~MainWnd()
 
 void MainWnd::closeEvent(QCloseEvent * event)
 {
-	if (!(QMessageBox::information(this, ("Tips"), ("你是否认输"), ("Yes"), ("No"))))
+	int button = QMessageBox::question(this, ("Tips"), ("你是否认输"), QMessageBox::Yes | QMessageBox::No);
+	switch (button)
 	{
-		this->close();
+	case QMessageBox::No:
+		event->ignore(); // 忽略退出信号，程序继续进行
+		break;
+	case QMessageBox::Yes:
+		emit quitBattle();
+		event->accept();
+		break;
+	default:
+		break;
 	}
-	emit quitBattle();
+	
 
 }

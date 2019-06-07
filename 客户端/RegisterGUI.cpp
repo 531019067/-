@@ -2,8 +2,9 @@
 #pragma execution_character_set("utf-8")
 RegisterGUI::RegisterGUI(QTcpSocket *socket, QWidget *parent) :_socket(socket), QDialog(parent),_tempUserName(""),_tempAccount(""),_tempPassword("")
 {
+	this->setWindowTitle("注册窗口");
 	_headPixmap = new QLabel();
-	_userNameLabel = new QLabel("用户名");
+	_userNameLabel = new QLabel("昵称");
 	_userNameText = new QLineEdit();
 	_accLabel = new QLabel("账号");
 	_accText = new QLineEdit();
@@ -24,8 +25,8 @@ RegisterGUI::~RegisterGUI()
 }
 void RegisterGUI::init()
 {
-	_accText->setPlaceholderText("最少2个最多12个字符");
-	_pwdText->setPlaceholderText("长度8-20个字母或者数字");
+	_accText->setPlaceholderText("最少6个最多20个字符");
+	_pwdText->setPlaceholderText("长度8-50个字母或者数字");
 	QHBoxLayout *line = new QHBoxLayout[5];
 	QVBoxLayout *mainLayout = new QVBoxLayout(this);
 	line[0].addWidget(_userNameLabel);

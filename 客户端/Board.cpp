@@ -2,9 +2,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
-#include <QInputDialog>
-#include <QListWidgetItem>
-#include "LoadDlg.h"
+
 #pragma execution_character_set("utf-8")
 #define GetRowCol(__row, __col, __id) \
     int __row = _s[__id]._row;\
@@ -43,7 +41,8 @@ void Board::init(bool bRedSide)//初始化棋局
 
 	_selectid = -1;
 	_bRedTurn = true;
-	_bRedSide = bRedSide;
+	this->_bRedSide = bRedSide;
+	_over = false;
 	update();
 }
 
@@ -89,7 +88,7 @@ void Board::load(QString fen)
 	{
 		_s[i]._dead = true;
 	}
-  	QString situation = fen.section(' ', 0, 0);
+  	QString situation = fen.section(' ', 0, 0);//以空格分割FEN串，并提前第一个字符串
 	_bRedTurn = fen.section(' ', 1, 1) != 'b';
 	int row = 0, col = 0;
 	for (int i = 0; i < situation.size(); i++)
@@ -99,11 +98,20 @@ void Board::load(QString fen)
 			row++;
 			col = 0;
 		}
-		if (situation[i].isLower())
+		if (situation[i].isUpper())
 		{
-			int type = getType(situation[i].toUpper().unicode());//红方棋子id从0-15;
+			int type = getType(situation[i].unicode());//获得类型编号
 			int index = redStoneId[type];
 			redStoneId[type]++;
+			//根据帅的位置判断，棋盘方向
+			if (type == 0)
+			{
+				if (row < 3)
+					_bRedSide = false;
+				else
+					_bRedSide = true;
+			}
+			//红方棋子id从0-15
 			_s[index]._row = row;
 			_s[index]._col = col;
 			_s[index]._dead = false;
@@ -111,11 +119,12 @@ void Board::load(QString fen)
 			
 
 		}
-		if (situation[i].isUpper())
+		if (situation[i].isLower())
 		{
-			int type = getType(situation[i].unicode());//黑方棋子id从16-31;
+			int type = getType(situation[i].toUpper().unicode());//获得类型编号
 			int index = blackStoneId[type];
 			blackStoneId[type]++;
+			//黑方棋子id从16-31;
 			_s[index]._row = row;
 			_s[index]._col = col;
 			_s[index]._dead = false;
@@ -131,17 +140,20 @@ void Board::load(QString fen)
 void Board::paintEvent(QPaintEvent *)
 {
 	QPainter p(this);
-	p.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-
+	//设置反锯齿
+	p.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);	
 	p.save();
+	//绘制棋盘
 	drawPlate(p);
 	p.restore();
-
+	//绘制棋子
 	p.save();
 	drawStone(p);
 	p.restore();
-
+	//绘制被选择的子
 	drawSelected(p, _selectid);
+
+	//drawSituation(p);
 }
 
 void Board::drawPlate(QPainter & p) //绘制棋盘
@@ -181,6 +193,21 @@ void Board::drawSelected(QPainter & p, int id)
 	QImage mask = selected.createMaskFromColor(rgb, Qt::MaskOutColor);//创建蒙版
 	selected.setAlphaChannel(mask);//用蒙版设置alpha通道
 	p.drawImage(topLeft(id), selected);//绘制图片
+}
+
+void Board::drawSituation(QPainter & p)
+{
+	QPoint pos(20, 600);
+	for (int i = 0; i < 16; i++)
+	{
+		for (int j = 0; j < 16; j++)
+		{
+			pos.setX(20 + j * 15);
+			pos.setY(600 + i * 15);
+			p.drawText(pos, QString::number((int)_situation._board[i * 16 + j]));
+		}
+		
+	}
 }
 
 QString Board::name(int id)
@@ -229,6 +256,25 @@ bool Board::isDead(int id)
 {
 	if (id == -1)return true;
 	return _s[id]._dead;
+}
+
+void Board::isOver()
+{
+	if (_s[0]._dead)
+	{
+		_over = true;
+		QMessageBox::information(this, "tips", "黑方胜");
+	}
+	else if (_s[16]._dead)
+	{
+		_over = true;
+		QMessageBox::information(this, "tips", "红方胜");
+	}
+	else
+	{
+		_over = false;
+	}
+
 }
 
 void Board::recordAddOrder(QString & record, bool stoneColor,int i)
@@ -338,7 +384,8 @@ void Board::trySelectStone(int id)
 {
 	if (id == -1)
 		return;
-
+	if (_over)
+		return;
 	if (!canSelect(id)) return;
 
 	_selectid = id;
@@ -361,6 +408,7 @@ void Board::tryMoveStone(int killid, int row, int col)
 	}
 
 	bool ret = canMove(_selectid, killid, row, col);
+
 	if (ret)
 	{
 		actualMoveStone(_selectid, killid, row, col);
@@ -419,7 +467,7 @@ bool Board::canMoveMa(int moveid, int, int row, int col)
 	int r = relation(row1, col1, row, col);
 	if (r != 12 && r != 21)
 		return false;
-
+	
 	if (r == 12)
 	{
 		if (getStoneId(row1, (col + col1) / 2) != -1)
@@ -571,6 +619,7 @@ void Board::killStone(int id)//吃棋
 {
 	if (id == -1) return;
 	_s[id]._dead = true;
+
 }
 
 bool Board::isBottomSide(int id)
@@ -578,26 +627,256 @@ bool Board::isBottomSide(int id)
 	return _bRedSide == _s[id]._red;
 }
 
+
+
+void Board::MakeNextMove(MoveStruct *step)
+{
+	int src = step->mv % 256;
+	int dst = step->mv / 256;
+	_situation.move(src,dst);
+}
+
+void Board::UndoMakeMove(MoveStruct *step)
+{
+	int src = step->mv / 256;
+	int dst = step->mv % 256;
+	uint8_t killid = step->killid;
+	_situation.move(src, dst);
+	//把被吃的棋子放回原来的位置
+	_situation.addPiece(killid, src);
+
+}
+
+void Board::getPossibleOfKing(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		dst = src + KingDelta[i];//获得增量
+		if (ccInFort[dst] != 1)//判断是否在九宫格内
+			continue;
+		if (_situation._board[dst] != 0)//判断有无子
+		{
+			if(_situation.sameColor(src,dst))
+				continue;
+		}
+		int mv = src + dst * 256;
+		uint8_t kill = _situation._board[dst];
+		MoveStruct *move = new MoveStruct(mv, kill);
+		_searchTree.append(move);
+
+	}
+	
+}
+
+void Board::getPossibleOfAdvisor(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		dst = src + AdvisorDelta[i];//获得增量
+		if (ccInFort[dst] != 1)//判断是否在九宫格内
+			continue;
+		if (_situation._board[dst] != 0)//判断有无子
+		{
+			if (_situation.sameColor(src, dst))
+				continue;
+		}
+		int mv = src + dst * 256;
+		uint8_t kill = _situation._board[dst];
+		MoveStruct *move = new MoveStruct(mv, kill);
+		_searchTree.append(move);
+	}
+}
+
+void Board::getPossibleOfBishop(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0;
+	int eye = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		dst = src + BishopDelta[i];//获得增量
+		eye = src + AdvisorDelta[i];//以士的增量作为象眼位置
+		if (ccInBoard[dst] != 1)//判断是否在棋盘内
+			continue;
+		if (_situation._board[eye] != 0)//判断是塞象眼
+			continue;
+		if (_situation.awayHalf(dst))//判断是否过河	
+			continue;
+		if (_situation._board[dst] != 0)//判断有无子
+		{
+			if (_situation.sameColor(src, dst))
+				continue;
+		}
+		int mv = src + dst * 256;
+		uint8_t kill = _situation._board[dst];
+		MoveStruct *move = new MoveStruct(mv, kill);
+		_searchTree.append(move);
+
+	}
+}
+
+void Board::getPossibleOfKnight(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0;
+	int leg = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			dst = src + KnightDelta[i][j];//获得增量
+			leg = src + KingDelta[i];//以帅的增量作为马腿位置
+			if (ccInBoard[dst] != 1)//判断是否在棋盘内
+				continue;
+			if (_situation._board[leg] != 0)//判断是否绊马腿
+				continue;
+			if (_situation._board[dst] != 0)//判断有无子
+			{
+				if (_situation.sameColor(src, dst))//判断颜色是否相同
+					continue;
+			}
+			int mv = src + dst * 256;
+			uint8_t kill = _situation._board[dst];
+			MoveStruct *move = new MoveStruct(mv, kill);
+			_searchTree.append(move);
+		}
+	}
+}
+
+void Board::getPossibleOfRook(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0;
+	//遍历四个方向的走法
+	for (int i=0;i<4;i++)
+	{
+		dst = 0;
+		dst += KingDelta[i];
+		while (ccInBoard[dst] == 1)//直到走到棋盘边缘
+		{
+			if (_situation._board[dst] != 0)//判断有无子
+			{
+				if (_situation.sameColor(src, dst))
+					break;
+				else
+				{
+					int mv = src + dst * 256;
+					uint8_t kill = _situation._board[dst];
+					MoveStruct *move = new MoveStruct(mv, kill);//吃子走法
+					_searchTree.append(move);
+					break;
+				}
+			}
+			int mv = src + dst * 256;
+			MoveStruct *move = new MoveStruct(mv);//不吃子走法
+			_searchTree.append(move);
+			dst += KingDelta[i];
+		}
+	}
+}
+
+void Board::getPossibleOfCannon(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0,count=0;
+	//遍历四个方向的走法
+	for (int i = 0; i < 4; i++)
+	{
+		dst = 0;
+		count = 0;//记录遇到第几个棋子
+		dst += KingDelta[i];
+		while (ccInBoard[dst] == 1)//直到走到棋盘边缘
+		{
+			if (_situation._board[dst] != 0)//判断有无子
+			{
+				count++;
+				if (count == 2 && !_situation.sameColor(src, dst))//当遇到第二个棋子，且颜色不同时，生成吃子走法
+				{
+					int mv = src + dst * 256;
+					uint8_t kill = _situation._board[dst];
+					MoveStruct *move = new MoveStruct(mv, kill);
+					_searchTree.append(move);//吃子走法
+					dst += KingDelta[i];
+					break;
+				}
+			}
+			if (count < 1)//当还没遇到棋子时,生成不吃子走法
+			{
+				int mv = src + dst * 256;
+				MoveStruct *move = new MoveStruct(mv);
+				_searchTree.append(move);//不吃子走法
+			}
+			dst += KingDelta[i];
+		}
+	}
+}
+
+void Board::getPossibleOfPawn(int id)
+{
+	int src = _situation.getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得id所在格子的编号	
+	int dst = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		//红棋编号8-14 &8!=0,黑棋编号16-22&8==0,增量顺序是-16，-1，+1，+16
+		if (_situation._board[src] & 8 != 0)
+			dst = src + KingDelta[i];//获得增量
+		else
+			dst = src + KingDelta[3-i];
+		if (ccInBoard[dst] != 1)//判断是否在棋盘内
+			continue; 
+		if (_situation._board[dst] != 0)//判断有无子
+		{
+			if (_situation.sameColor(src, dst))
+				continue;
+		}
+		int mv = src + dst * 256;
+		uint8_t kill = _situation._board[dst];
+		MoveStruct *move = new MoveStruct(mv, kill);
+		_searchTree.append(move);
+		if (!_situation.awayHalf(src))//如果没过河，则不用搜索其他方向走法
+			break;
+
+	}
+	
+}
+
 void Board::traverseNextStep()
 {
-	int src = 0;
-	for (int i = 0; i < 32; i++)
+	int min = 0, max = 16;
+	if (_bRedTurn)
 	{
+		min = 16, max = 32;
+	}
+	for (int i = min; i < max; i++)
+	{
+		if (_s[i]._dead)
+			continue;
 		switch (_s[i]._type)
 		{
 		case Stone::KING:
+			getPossibleOfKing(i);
 			break;
 		case Stone::ADVISOR:
+			getPossibleOfAdvisor(i);
 			break;
 		case Stone::BISHOP:
+			getPossibleOfBishop(i);
 			break;
 		case Stone::KNIGHT:
+			getPossibleOfKnight(i);
 			break;
 		case Stone::ROOK:
+			getPossibleOfRook(i);
 			break;
 		case Stone::CANNON:
+			getPossibleOfCannon(i);
 			break;
 		case Stone::PAWN:
+			getPossibleOfPawn(i);
 			break;
 		default:
 			break;
@@ -605,42 +884,41 @@ void Board::traverseNextStep()
 	}
 }
 
-void Board::slotSave()
+int Board::AlphaBeta(int alpha, int beta, int depth)
 {
-	QFile fenFile(".\\Fen.txt");
-	if (!fenFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+	if (_over || depth <= 0)
 	{
-		qDebug() << "Could not open file for writing";
-		return;
+		return _situation.evaluate();
 	}
-	QTextStream out(&fenFile);
-	bool isOk;
-	QString name = QInputDialog::getText(this, "保存对局", "请命名对局", QLineEdit::Normal,nullptr,&isOk);
-	if (isOk)
-	{
-		QString fen = _situation.createFen();
-		out << name << ':' << fen <<'\n';
-		QMessageBox::information(this, "tips", "保存成功");
-	}
-	fenFile.close();
+	//把最优值初始成最小的数，则任何结果皆会大于该结果
+	int best = -15000;
 
+	//生成所有步法
+	traverseNextStep();
+	while (_searchTree.size()) //如果列表不为空
+	{
+		MoveStruct *step = _searchTree.last();
+		_searchTree.pop_back();
+		MakeNextMove(step);
+		int value = -AlphaBeta(-beta, -alpha, depth - 1);
+		UndoMakeMove(step);
+		delete step;
+		if (value >= beta)
+		{
+			return beta;
+		}
+		if (value > best)
+		{
+			best = value;
+			if (value > alpha)
+			{
+				alpha = value;
+			}
+		}
+	}
+	// return Alpha;
+	return best;
 }
-
-void Board::slotLoad()
-{
-	LoadDlg * loadDlg = new LoadDlg(this);
-	loadDlg->loadFile(".\\Fen.txt");
-	if (loadDlg->exec() == QDialog::Accepted)
-	{
-		QString fen = loadDlg->_fenList->at(loadDlg->_selected);
-		load(fen);
-		_situation.loadFromFen(fen);
-	}
-	
-
-}
-
-
 
 void Board::moveStone(int moveid, int row, int col)
 {
@@ -666,21 +944,28 @@ void Board::saveStep(int moveid, int killid, int row, int col, QVector<Step*>& s
 
 void Board::actualMoveStone(int moveid, int killid, int row, int col)
 {
-	GetRowCol(row1, col1, moveid);//获得要移动的棋子行列
-	saveStep(moveid, killid, row, col, _steps);//保存步法
-	QString moveStr = createRecord(_steps.last());//获得步法文字描述记录
+	;//获得要移动的棋子行列
+	GetRowCol(row1, col1, moveid);
+	//保存步法
+	saveStep(moveid, killid, row, col, _steps);
+	//获得步法文字描述记录,并更新棋谱
+	QString moveStr = createRecord(_steps.last());
 	emit(sigMove(moveStr));
-	_situation.move(row1, col1, row, col);//更新局面
-
+	//更新局面
+	_situation.move(row1, col1, row, col);
+	//更新棋子
 	killStone(killid);
 	moveStone(moveid, row, col);
-
+	//判断是否结束
+	isOver();
+	//轮到对手回合
 	_bRedTurn = !_bRedTurn;
 
 }
 
 void Board::click(int id, int row, int col)
 {
+	//判断有无选择棋子
 	if (this->_selectid == -1)
 	{
 		trySelectStone(id);
@@ -694,9 +979,10 @@ void Board::click(int id, int row, int col)
 void Board::click(QPoint pt)
 {
 	int row, col;
+	//根据坐标获得行和列
 	bool bClicked = getClickRowCol(pt, row, col);
 	if (!bClicked) return;
-
+	//根据行和列获得对应格子
 	int id = getStoneId(row, col);
 	click(id, row, col);
 }
@@ -715,7 +1001,8 @@ void Board::back(Step *step)//真正的悔棋操作函数
 {
 	reliveStone(step->_killid);
 	moveStone(step->_moveid, step->_rowFrom, step->_colFrom);
-
+	_bRedTurn = !_bRedTurn;
+	isOver();
 }
 
 void Board::backOne()//提取步法历史表最后一步
@@ -725,9 +1012,11 @@ void Board::backOne()//提取步法历史表最后一步
 	Step* step = this->_steps.last();
 	_steps.removeLast();
 	back(step);
+	delete step;
+	_situation.back();
 	emit sigBack();
 	update();
-	delete step;
+
 }
 
 void Board::back()//悔棋函数
@@ -735,13 +1024,4 @@ void Board::back()//悔棋函数
 	backOne();
 
 }
-void Board::slotNew()
-{
-	init(_bRedSide);
-}
 
-
-void Board::slotBack()
-{
-	back();
-}

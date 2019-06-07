@@ -2,7 +2,7 @@
 #pragma execution_character_set("utf-8")
 LoginGUI::LoginGUI(QTcpSocket *socket,QWidget *parent) :_socket(socket),QDialog(parent),_tempAccount("."),_tempPassword(".")
 {
-
+	this->setWindowTitle("登录窗口");
 	_userInfo = new UserInformation;
 	_headPixmap = new QLabel();
 	_accLabel = new QLabel("账  号");
@@ -36,7 +36,7 @@ void LoginGUI::init()
 {
 	QGridLayout *mainLayout = new QGridLayout(this);
 	//头像
-	QPixmap headPicture(".\\Resources\\RK");
+	QPixmap headPicture(".\\Resources\\head.jpg");
 	
 	_headPixmap->setFixedSize(90, 90);
 	_headPixmap->setPixmap(headPicture);
@@ -127,7 +127,7 @@ void LoginGUI::slotSignUp()
 	disconnect(_socket, SIGNAL(readyRead()), this, SLOT(slotDataArrive()));
 	_registerGUI->exec();
 	_registerGUI->disconnect(_socket, SIGNAL(readyRead()), _registerGUI, SLOT(slotDataArrive()));
-	delete _registerGUI;
+
 	connect(_socket, SIGNAL(readyRead()), this, SLOT(slotDataArrive()));
 
 }

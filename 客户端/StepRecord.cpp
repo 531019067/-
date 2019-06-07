@@ -79,8 +79,10 @@ void StepRecord::slotBack()
 	drawTurn();
 }
 
-void StepRecord::slotClear()
+void StepRecord::slotClear(bool turn)
 {
+	_bRedTurn = turn;
+	drawTurn();
 	_pageNum = 0;
 	_prePage->setDisabled(true);
 	_nextPage->setDisabled(true);

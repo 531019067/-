@@ -1,10 +1,24 @@
 #include "ChessSituation.h"
 
-ChessSituation::ChessSituation()
-	:_board(new char[256]),_bRedTurn(true)
-{
-	memcpy(_board, InitialBoard,256);
-	_moveHistory = new QVector<MoveStep>;
+ChessSituation::ChessSituation(bool direction)
+	:_board(new char[256]),_isRedTurn(0),_direction(direction)
+{	
+	_sqBKing = getIndexFromRowCol(0, 4);
+	_sqRKing = getIndexFromRowCol(9, 4);
+	_redValue = 0;
+	_blackValue = 0;
+	memset(_board, 0, 256);
+
+	for (int i = 0,pc=0; i < 256; i++) {
+		pc = InitialBoard[i];
+		if (pc != 0) {
+			addPiece(i, pc);
+		}
+	}
+	if (!direction)
+	{
+		flipSquare();
+	}
 }
 
 int ChessSituation::getIndexFromRowCol(int row, int col)
@@ -16,26 +30,57 @@ int ChessSituation::getIndexFromRowCol(int row, int col)
 
 void ChessSituation::move(int sqSrc, int sqDst)
 {
-	_board[sqDst] = _board[sqSrc];
-	_board[sqSrc] = 0;
-	_bRedTurn = !_bRedTurn; 
+	int pc = _board[sqDst];
+	//当目标位置不为0时，即为吃子，拿走目标位置的棋子
+	if(pc!=0)
+		delPiece(sqDst);
+	pc = _board[sqSrc];
+	//将棋子从原来位子的拿走，放在目标位置上
+	delPiece(sqSrc);
+	addPiece(sqDst,pc);
+	//更新将的位置
+	if (pc==16)
+		_sqBKing = sqDst;
+	if (pc == 8)
+		_sqRKing = sqDst;
+	//转变下棋方
+	_isRedTurn = 1 - _isRedTurn;
+	//判断对方是否被将，杀，捉
+	bool checked = check();
+	bool mating = mate();
+	bool chased = chase();
 	int mv = sqSrc + sqDst * 256;
-	MoveStep step(mv, _board[sqDst]);
-	_moveHistory->append(step);
+	MoveStruct *step=new MoveStruct(mv, _board[sqDst],checked);
+	_moveHistory.append(step);
 }
 void ChessSituation::move(int srcRow, int srcCol, int dstRow, int dstCol)
 {
-	move(getIndexFromRowCol(srcRow, srcCol), getIndexFromRowCol(dstRow, dstCol));
+	int src = getIndexFromRowCol(srcRow, srcCol);
+	int dst = getIndexFromRowCol(dstRow, dstCol);
+	move(src,dst );
 }
 void ChessSituation::back()
 {
-	if (this->_moveHistory->size() == 0) return;
-	MoveStep step = this->_moveHistory->last();
-	int src = step.mv % 256;
-	int dst = step.mv / 256;
-	_board[src] = _board[dst];
-	_board[dst] = step.killid;
-	_moveHistory->removeLast();
+	if (_moveHistory.size() == 0) 
+		return;
+	//获得历史表最后一步
+	MoveStruct *step = _moveHistory.last();
+	//获得步法的起点和终点
+	int src = step->mv % 256;
+	int dst = step->mv / 256;
+	//回退棋子
+	int pc = _board[dst];
+	delPiece(dst);
+	addPiece(src, pc);
+	//如果吃了子，则要复活棋子
+	if (step->killid != 0)
+	{
+		pc = step->killid;
+		addPiece(dst, pc);
+	}
+	//历史表中删除最后一步
+	delete step;
+	_moveHistory.removeLast();
 }
 int ChessSituation::getSqX(int sq)
 {
@@ -45,6 +90,171 @@ int ChessSituation::getSqX(int sq)
 int ChessSituation::getSqY(int sq)
 {
 	return sq & 15;
+}
+
+bool ChessSituation::sameColor(int src, int dst)
+{
+	/*红方棋子在棋盘上的值范围是8-14，黑方的范围是16-22，&8不等于0的为红棋，等于0的为黑棋*/
+	bool srcColor = _board[src] & 8 != 0;
+	bool dstColor = _board[dst] & 8 != 0;
+	if (srcColor == dstColor)//颜色相同
+		return true;
+	return false;
+}
+
+bool ChessSituation::awayHalf(int sq)
+{
+	//当棋子在棋盘上方0-127格时，&128等于0，在下方128-255格时，&128等于128
+	//当turn为0时，进7位还是0，当turn为1时，进7位等于128
+	if (_direction)
+	{
+		return ((sq & 0x80) == (_isRedTurn << 7));
+	}
+	else
+	{
+		return ((sq & 0x80) != (_isRedTurn << 7));
+	}
+
+}
+
+int ChessSituation::flipSquare(int sq)
+{
+	return 254-sq;
+}
+
+void ChessSituation::flipSquare()
+{
+	for (int i=0;i<256;i++)
+	{
+		int j = flipSquare(i);
+		_board[i] ^= _board[j];
+		_board[j] ^= _board[i];
+		_board[i] ^= _board[j];
+	}
+}
+
+bool ChessSituation::check()
+{
+	int i, j, sq, sqDst;
+	int OPP_TAG, dstValue, nDelta;
+	if (_isRedTurn)
+		sq = _sqBKing;
+	else
+		sq = _sqRKing;
+	OPP_TAG = 16 - (_isRedTurn << 3);//获得对方的标记
+
+	// 1. 判断是否被对方的兵(卒)将军
+	if (_isRedTurn == 0 && _board[sq - 16] == OPP_TAG + ChessSituation::PAWN)//当下方棋子走时,判断将上方一格棋子是否为对方的兵
+	{		
+		return true;
+	}
+	if (_isRedTurn == 1 && _board[sq + 16] == OPP_TAG + ChessSituation::PAWN)//当上方棋子走时，判断将下方一格棋子是否为对方的兵
+	{
+		return true;
+	}
+	for (nDelta = -1; nDelta <= 1; nDelta += 2)
+	{
+		if (_board[sq + nDelta] == OPP_TAG + ChessSituation::PAWN)//判断左右两边的格子是否为对面的兵
+		{
+			return true;
+		}
+	}
+
+	// 2. 判断是否被对方的马将军(以仕(士)的步长当作马腿)
+	for (i = 0; i < 4; i++)
+	{
+		if (_board[sq + AdvisorDelta[i]] != 0)
+		{
+			continue;
+		}
+		for (j = 0; j < 2; j++)
+		{
+			dstValue = _board[sq + ccKnightCheckDelta[i][j]];
+			if (dstValue == OPP_TAG + ChessSituation::KNIGHT)
+			{
+				return true;
+			}
+		}
+	}
+
+	// 3. 判断是否被对方的车或炮将军(包括将帅对脸)
+	for (i = 0; i < 4; i++)
+	{
+		nDelta = KingDelta[i];
+		sqDst = sq + nDelta;
+
+		while (ccInBoard[sqDst] == 1)
+		{
+			dstValue = _board[sqDst];
+			if (dstValue != 0)//当遇到棋子时
+			{
+				if (dstValue == OPP_TAG + ChessSituation::KING || dstValue == OPP_TAG + ChessSituation::ROOK)
+				{
+					return true;
+				}
+				break;
+			}
+			sqDst += nDelta;
+		}
+		sqDst += nDelta;//当有一个炮台的时候，搜索炮
+		while (ccInBoard[sqDst] == 1)
+		{
+			int pcDst = _board[sqDst];
+			if (pcDst != 0) {
+				if (pcDst == OPP_TAG + ChessSituation::CANNON)
+				{
+					return true;
+				}
+				break;
+			}
+			sqDst += nDelta;
+		}
+	}
+	return false;
+	
+
+}
+
+bool ChessSituation::chase()
+{
+	return false;
+}
+
+bool ChessSituation::mate()
+{
+	return false;
+}
+
+void ChessSituation::addPiece(int sq, int pc)
+{
+	_board[sq] = pc;
+	if (pc < 16) 
+	{
+		_redValue += cucvlPiecePos[pc - 8][sq];
+	}
+	else 
+	{
+		_blackValue += cucvlPiecePos[pc - 16][flipSquare(sq)];		
+	}
+}
+
+void ChessSituation::delPiece(int sq)
+{
+	int pc = _board[sq];
+	_board[sq] = 0;
+	if (pc < 16)
+	{
+		_redValue -= cucvlPiecePos[pc - 8][sq];
+	}
+	else
+	{
+		_blackValue -= cucvlPiecePos[pc - 16][flipSquare(sq)];
+	}
+}
+
+int ChessSituation::evaluate(void)const
+{
+	return (_isRedTurn == 0 ? _redValue - _blackValue : _blackValue - _redValue);
 }
 
 int ChessSituation::getStoneType(char stone)
@@ -76,7 +286,7 @@ void ChessSituation::loadFromFen(QString Fen)
 {
 	QString situation = Fen.section(' ', 0, 0);
 	QString turn = Fen.section(' ', 1, 1);
-	_bRedTurn = turn.contains('b')?0:1;
+	_isRedTurn = turn.contains('b')?1:0;
 	int row = 0, col = 0;
 	for (int i = 0; i < 256; i++)
 		_board[i] = 0;
@@ -87,16 +297,35 @@ void ChessSituation::loadFromFen(QString Fen)
 			row++;
 			col = 0;
 		}
-		if (situation[i].isLower())
-		{
-			int stoneType=getStoneType(situation[i].toUpper().unicode());
-			_board[getIndexFromRowCol(row, col)] = stoneType + cRed;//在在棋盘上红方棋子的值为 类型+8
-			col++;
-		}
 		if (situation[i].isUpper())
 		{
-			int stoneType = getStoneType(situation[i].unicode());
-			_board[getIndexFromRowCol(row, col)] = stoneType + cBlack;//棋盘上黑方棋子的值为 类型+16
+			int stoneType=getStoneType(situation[i].unicode());
+			//当找到红方帅时，判断棋盘方向
+			if (stoneType == 0)
+			{
+				_sqRKing = getIndexFromRowCol(row, col);
+				if (row<3)
+				{
+					_direction = false;
+				} 
+				else
+				{
+					_direction = true;
+				}
+			}
+			
+			addPiece(getIndexFromRowCol(row, col), stoneType + cRed);//在在棋盘上红方棋子的值为 类型+8
+			
+			col++;
+		}
+		if (situation[i].isLower())
+		{
+			int stoneType = getStoneType(situation[i].toUpper().unicode());
+			if (stoneType == 0)
+			{
+				_sqBKing = getIndexFromRowCol(row, col);
+			}
+			addPiece(getIndexFromRowCol(row, col), stoneType + cBlack);//在在棋盘上黑方方棋子的值为 类型+16
 			col++;
 		}
 		if (situation[i].isDigit())
@@ -104,14 +333,14 @@ void ChessSituation::loadFromFen(QString Fen)
 			col += situation[i].unicode() - 48;
 		}
 	}
-	_moveHistory->clear();
+	_moveHistory.clear();
 		
 }
 
 QString ChessSituation::createFen()
 {
 	QString fen;
-	int row = 0, col = 0,space=0,s;
+	int row = 0, col = 0,space=0;
 	while (row < 10)
 	{
 		int index = getIndexFromRowCol(row, col);
@@ -126,15 +355,15 @@ QString ChessSituation::createFen()
 				if (space > 0)//当间隔不为0时
 				{
 					QChar num(space + 48);
-					fen += QChar(space + 48);
+					fen += num;
 					space = 0;
 				}
 				//因为黑方棋子是16-22，红方棋子是8-15，所以-16大于0的是黑方棋子，小于0的是红方棋子
-				s = _board[index] - 16;
+				int s = _board[index] - 16;
 				if (s >= 0)
-					fen += cStoneType[s];
+					fen += cStoneType[s].toLower();
 				else
-					fen += cStoneType[s + 8].toLower();
+					fen += cStoneType[s + 8];
 			}
 			
 		}
@@ -150,86 +379,11 @@ QString ChessSituation::createFen()
 	}
 	fen.left(fen.size() - 1);//去掉在最后多余一个/
 	fen += ' ';
-	fen += _bRedTurn ? 'r' : 'b';
+	fen += _isRedTurn ? 'b' : 'w';
 	fen += " - - 0 1";
 	return fen;
 }
 
 
-//
-//int Board::canChaseJiang(int id)
-//{
-//	int src = getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得将军所在格子的编号
-//	int dst = 0;
-//	for (int i = 0; i < 4; i++)
-//	{
-//		dst = src + JiangDelta[i];//获得增量
-//		if (ccInFort[dst] == 1)//判断是否在九宫格内
-//			if (_situation[dst] != 0)//判断有无子
-//			{
-//				return (_situation[dst] & 8 != 0) ? 0 : _situation[dst];
-//			}
-//
-//	}
-//	return 0;
-//}
-//
-//int Board::canChaseShi(int id)
-//{
-//	int src = getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得士所在格子的编号
-//	int dst = 0;
-//	for (int i = 0; i < 4; i++)
-//	{
-//		dst = src + ShiDelta[i];//获得增量
-//		if (ccInFort[dst] == 1)//判断是否在九宫格内
-//			if (_situation[dst] != 0)//判断有无子
-//			{
-//				return (_situation[dst] & 8 != 0) ? 0 : _situation[dst];
-//			}
-//
-//	}
-//	return 0;
-//}
-//
-//int Board::canChaseXiang(int id)
-//{
-//	int src = getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得象所在格子的编号
-//	int dst = 0;
-//	int eye = 0;//象眼
-//	for (int i = 0; i < 4; i++)
-//	{
-//		dst = src + XiangDelta[i];//获得增量
-//		eye = src + ShiDelta[i];//以士的增量获得象眼位置
-//		if (ccInBoard[dst] == 1)//判断是否在棋盘内
-//			if (_situation[eye] == 0)//判断有没有塞象眼
-//				if (_situation[dst] != 0)//判断有无子
-//				{
-//					return (_situation[dst] & 8 != 0) ? 0 : _situation[dst];
-//				}
-//
-//	}
-//	return 0;
-//}
-//
-//int Board::canChaseMa(int id)
-//{
-//	int src = getIndexFromRowCol(_s[id]._row, _s[id]._col);//获得象所在格子的编号
-//	int dst = 0;
-//	int leg = 0;//马腿
-//	for (int i = 0; i < 4; i++)
-//	{
-//		for (int j = 0; j < 2; j++)
-//		{
-//			dst = src + MaDelta[i][j];//获得增量
-//			leg = src + JiangDelta[i];//以帅的增量获得马腿位置
-//			if (ccInBoard[dst] == 1)//判断是否在棋盘内
-//				if (_situation[leg] == 0)//判断有没有绊马腿
-//					if (_situation[dst] != 0)//判断有无子
-//					{
-//						return (_situation[dst] & 8 != 0) ? 0 : _situation[dst];
-//					}
-//		}
-//
-//	}
-//	return 0;
-//}
+
+

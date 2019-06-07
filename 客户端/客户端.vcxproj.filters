@@ -159,14 +159,14 @@
     <ClInclude Include="RoomInformation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Stone.h">
-      <Filter>Header Files\chess</Filter>
-    </ClInclude>
     <ClInclude Include="ChessSituation.h">
       <Filter>Header Files\chess</Filter>
     </ClInclude>
     <ClInclude Include="ChessParameter.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stone.h">
+      <Filter>Header Files\chess</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

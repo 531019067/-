@@ -7,7 +7,7 @@ RoomWnd::RoomWnd(QWidget *parent/* =0 */)
 	_vLayout(new QVBoxLayout(this)),
 	_roomListWidget(new QListWidget(this)),
 	_udpSocket(new QUdpSocket(this))
-{
+{	
 	resize(400, 400);
 	QLabel *rowText = new QLabel(this);
 	_vLayout->addWidget(_roomListWidget);
@@ -34,6 +34,7 @@ void RoomWnd::addRoom(const RoomInformation & room)
 		row++;
 	QString str = "房间号：" + QString::number(room._id) + ' ' + room._ownerName + "的房间" + "       人数"+QString::number(room._playerNum)+"/2";
 	QListWidgetItem* temp = new QListWidgetItem(str);
+	temp->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable);
 	_roomListWidget->insertItem(row,temp);
 	_roomIdList.insert(row,room._id);
 	update();

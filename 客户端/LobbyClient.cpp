@@ -7,7 +7,10 @@ Lobby::Lobby(QWidget *parent /* = 0 */):QWidget(parent)
 	this->setWindowTitle("ÓÎÏ·´óÌü");
 	setMinimumSize(500,500);
 	_roomWnd = new RoomWnd(this);
-
+	QPixmap pixmap = QPixmap(".\\Resources\\background.jpg").scaled(this->size());
+	QPalette  palette(this->palette());
+	palette.setBrush(QPalette::Background, QBrush(pixmap));
+	this->setPalette(palette);
 
 	_socket = new QTcpSocket(this);
 	_socket->connectToHost(QHostAddress("127.0.0.1"), 9898);
